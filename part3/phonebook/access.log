@@ -1,0 +1,4 @@
+::1 - - [23/Aug/2022:06:25:35 +0000] "GET /api/persons/2 HTTP/1.1" 404 55 "-" "PostmanRuntime/7.26.8"
+::1 - - [23/Aug/2022:06:25:47 +0000] "GET /api/persons/2 HTTP/1.1" 404 55 "-" "PostmanRuntime/7.26.8"
+::1 - - [23/Aug/2022:06:26:05 +0000] "GET /api/persons/2 HTTP/1.1" 404 55 "-" "PostmanRuntime/7.26.8"
+::1 - - [23/Aug/2022:06:26:08 +0000] "GET /api/persons HTTP/1.1" 200 223 "-" "PostmanRuntime/7.26.8"
