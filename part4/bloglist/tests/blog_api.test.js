@@ -1,17 +1,37 @@
+const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
-const { initialBlogs, blogsInDb } = require('./test_helper')
+const User = require('../models/user')
+const { initialBlogs, blogsInDb, invalidToken } = require('./test_helper')
 
 const api = supertest(app)
+let token = ''
 
 beforeEach(async () => {
   await Blog.deleteMany({})
+  await User.deleteMany({})
+  
+  const passwordHash = await bcrypt.hash('sekret', 10)
+  const user = new User({ username: 'root', passwordHash })
+
+  const createdUser = await user.save()
   for(const blog of initialBlogs) {
-    await new Blog(blog).save()
+    await new Blog({
+      ...blog, 
+      user: createdUser._id
+    }).save()
   }
-})
+
+  const response = await api
+    .post('/api/login')
+    .send({
+      username: 'root',
+      password: 'sekret',
+    })
+  token = `bearer ${response.body.token}`
+}, 10000)
 
 test('blogs are returned as json', async () => {
   await api
@@ -25,6 +45,21 @@ test('blog should have id instead of _id in returned blogs', async () => {
   response.body.forEach(b => expect(b.id).toBeDefined())
 })
 
+test('should respond 401 unauthorized if token is not provided', async () => {
+  const newBlog = {
+    title: "Unit Test",
+    author: "Alan Bob",
+    url: "https://test-blog-url.com/",
+    likes: 4
+  }
+  const response = await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(401)
+    
+  expect(response.body).toEqual({ error: "token missing"})
+})
+
 test('should create a new blog', async () => {
   const newBlog = {
     title: "Unit Test",
@@ -34,6 +69,7 @@ test('should create a new blog', async () => {
   }
   const response = await api
     .post('/api/blogs')
+    .set('Authorization', token) 
     .send(newBlog)
     .expect(201)
     .expect('Content-Type', /application\/json/)
@@ -54,6 +90,7 @@ test('should default likes to 0 if not specified', async () => {
   }
   const response = await api
     .post('/api/blogs')
+    .set('Authorization', token) 
     .send(newBlog)
     .expect(201)
     .expect('Content-Type', /application\/json/)
@@ -70,6 +107,7 @@ test('should return 400 if title is not specified', async () => {
   }
   await api
     .post('/api/blogs')
+    .set('Authorization', token) 
     .send(newBlog)
     .expect(400)
 })
@@ -82,6 +120,7 @@ test('should return 400 if url is not specified', async () => {
   }
   await api
     .post('/api/blogs')
+    .set('Authorization', token) 
     .send(newBlog)
     .expect(400)
 })
@@ -92,6 +131,7 @@ test('should delete a blog by id', async () => {
 
   await api
     .delete(`/api/blogs/${blogToDelete.id}`)
+    .set('Authorization', token) 
     .expect(204)
 
   const blogsAtEnd = await blogsInDb()

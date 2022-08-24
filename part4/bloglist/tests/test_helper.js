@@ -1,4 +1,5 @@
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 const initialBlogs = [
   {
@@ -44,4 +45,15 @@ const blogsInDb = async () => {
   return blogs.map(b => b.toJSON())
 }
 
-module.exports = { initialBlogs, blogsInDb }
+const usersInDb = async () => {
+  const users = await User.find({})
+  return users.map(u => u.toJSON())
+}
+const invalidToken = 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb3QiLCJpZCI6IjYzMDY0M2UyYTNiZDMwMWRlNTEyYTgxMyIsImlhdCI6MTY2MTM1NDk3OX0.jXEqw1vRHYoXC0wPq7HZoQAEmXIsg_KNvPtIRznN0Oc'
+
+module.exports = { 
+  initialBlogs, 
+  blogsInDb, 
+  usersInDb, 
+  invalidToken
+}
